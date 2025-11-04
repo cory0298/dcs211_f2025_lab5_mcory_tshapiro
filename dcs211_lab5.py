@@ -47,35 +47,12 @@ def fetchDigit(df: pd.core.frame.DataFrame, which_row: int) -> tuple[int, np.nda
     pixels = np.reshape(pixels, (8,8))  # makes 8x8
     return (digit, pixels)              # return a tuple
 
-###################
-def main() -> None:
-    # for read_csv, use header=0 when row 0 is a header row
-    filename = 'digits.csv'
-    df = pd.read_csv(filename, header = 0)
-    print(df.head())
-    print(f"{filename} : file read into a pandas dataframe...")
-
-    num_to_draw = 5
-    for i in range(num_to_draw):
-        # let's grab one row of the df at random, extract/shape the digit to be
-        # 8x8, and then draw a heatmap of that digit
-        random_row = random.randint(0, len(df) - 1)
-        (digit, pixels) = fetchDigit(df, random_row)
-
-        print(f"The digit is {digit}")
-        print(f"The pixels are\n{pixels}")  
-        drawDigitHeatmap(pixels)
-        plt.show()
-
-    #
-    # OK!  Onward to knn for digits! (based on your iris work...)
-    
 ################################## 
 
 def predictiveModel(training_set: np.ndarray, features: np.ndarray) -> int:
     ''' Implements a 1-NN classifier to predict the digit for a given set of features.
     Parameters:
-        training_set: a 2D numpy array where each row contains features (pixels)
+        training_set: a numpy array where each row contains features (pixels)
                       and the last column contains the label (digit)
         features: a 1D numpy array of pixel values for a single digit to classify
     Returns:
@@ -99,6 +76,29 @@ def predictiveModel(training_set: np.ndarray, features: np.ndarray) -> int:
             predicted_digit = training_label
     
     return predicted_digit  
+
+###################
+def main() -> None:
+    # for read_csv, use header=0 when row 0 is a header row
+    filename = 'digits.csv'
+    df = pd.read_csv(filename, header = 0)
+    print(df.head())
+    print(f"{filename} : file read into a pandas dataframe...")
+
+    num_to_draw = 5
+    for i in range(num_to_draw):
+        # let's grab one row of the df at random, extract/shape the digit to be
+        # 8x8, and then draw a heatmap of that digit
+        random_row = random.randint(0, len(df) - 1)
+        (digit, pixels) = fetchDigit(df, random_row)
+
+        print(f"The digit is {digit}")
+        print(f"The pixels are\n{pixels}")  
+        drawDigitHeatmap(pixels)
+        plt.show()
+
+    #
+    # OK!  Onward to knn for digits! (based on your iris work...)
 
 ###############################################################################
 # wrap the call to main inside this if so that _this_ file can be imported
