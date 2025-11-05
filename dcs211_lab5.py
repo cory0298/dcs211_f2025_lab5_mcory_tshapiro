@@ -47,6 +47,36 @@ def fetchDigit(df: pd.core.frame.DataFrame, which_row: int) -> tuple[int, np.nda
     pixels = np.reshape(pixels, (8,8))  # makes 8x8
     return (digit, pixels)              # return a tuple
 
+################################## 
+
+def predictiveModel(training_set: np.ndarray, features: np.ndarray) -> int:
+    ''' Implements a 1-NN classifier to predict the digit for a given set of features.
+    Parameters:
+        training_set: a numpy array where each row contains features (pixels)
+                      and the last column contains the label (digit)
+        features: a 1D numpy array of pixel values for a single digit to classify
+    Returns:
+        predicted_digit: an integer representing the predicted digit (0-9)
+    '''
+    min_distance = float('inf')  # start with infinite distance
+    predicted_digit = -1 # initialize predicted digit
+    
+    # Iterate through each row in the training set
+    for row in training_set:
+        # Extract the features (all columns except the last one, which is the label)
+        training_features = row[:-1] # all but last column
+        training_label = int(row[-1])
+        
+        # Calculate Euclidean distance between test features and training features
+        distance = np.linalg.norm(features - training_features)
+        
+        # If this is the closest digit so far, update our prediction
+        if distance < min_distance:
+            min_distance = distance
+            predicted_digit = training_label
+    
+    return predicted_digit  
+
 ###################
 def main() -> None:
     # for read_csv, use header=0 when row 0 is a header row
@@ -71,7 +101,6 @@ def main() -> None:
     '''
     #
     # OK!  Onward to knn for digits! (based on your iris work...)
-    #
 
 def cleanTheData(data: pd.core.frame.DataFrame) -> np.array:
     data = data.dropna()
