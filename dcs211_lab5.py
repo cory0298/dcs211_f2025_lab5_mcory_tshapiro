@@ -78,7 +78,7 @@ def predictiveModel(training_set: np.ndarray, features: np.ndarray) -> int:
     return predicted_digit  
 
 
-def cleanTheData(data: pd.core.frame.DataFrame) -> np.ndarray: 
+def cleanTheData(data: pd.core.frame.DataFrame) -> np.ndarray: #type: ignore
     '''
     Cleans the dataframe made from digits.csv by removing useless values, 
     converting all digits to float and returning a numpy array
@@ -90,7 +90,7 @@ def cleanTheData(data: pd.core.frame.DataFrame) -> np.ndarray:
     data_array = data.to_numpy()
     return data_array
 
-def modelTrainingAndTesting(filename: str, training_size: int) -> None: 
+def modelTrainingAndTesting(filename: str, training_size: float) -> None: 
     '''
     Helper function for training and testing the model with different split points
     Parameters:
@@ -132,10 +132,13 @@ def modelTrainingAndTesting(filename: str, training_size: int) -> None:
         # Check if correct
         if predicted_label == actual_label:
             correct += 1
-            #adding heatmap viz for first 5 inccoretc digits
         else:
+            # Question 5: Visualize first 5 incorrectly predicted digits
             wrong_digits += 1
-            if wrong_digits < 5:
+            if wrong_digits <= 5:
+                print(f"\nMisclassified digit #{wrong_digits}:")
+                print(f"  Actual label: {actual_label}")
+                print(f"  Predicted label: {predicted_label}")
                 pixels = np.reshape(test_features, (8, 8))
                 drawDigitHeatmap(pixels)                
         
