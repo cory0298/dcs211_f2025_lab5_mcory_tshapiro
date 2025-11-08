@@ -26,7 +26,7 @@ def drawDigitHeatmap(pixels: np.ndarray, showNumbers: bool = True) -> None:
     # (fmt = "d" indicates to show annotation with integer format)
     sns.heatmap(pixels, annot = showNumbers, fmt = "d", linewidths = 0.5, \
                 ax = axes, cmap = colormap)
-    plt.show(block = False)
+    plt.show(block = True)
 
 ###########################################################################
 def fetchDigit(df: pd.core.frame.DataFrame, which_row: int) -> tuple[int, np.ndarray]: #type: ignore
@@ -90,6 +90,65 @@ def cleanTheData(data: pd.core.frame.DataFrame) -> np.ndarray:
     data_array = data.to_numpy()
     return data_array
 
+def modelTrainingAndTesting(filename: str, training_size: int) -> None: 
+    '''
+    Helper function for training and testing the model with different split points
+    Parameters:
+        Filename: filename of the file to be read
+        Training size: 0 - 1 representing how what percent of the file is to be training
+    '''
+    df = pd.read_csv(filename, header = 0)
+    print("\n=== Question 3: Testing 1-NN classifier ===")
+
+    # Check the data shape and info
+    print(f"Original data shape: {df.shape}")
+    print(f"Number of NaN values per column:\n{df.isna().sum()}")
+
+    # Keep only the first 65 columns (64 pixels + 1 label)
+    df = df.iloc[:, :65]
+
+    # Convert dataframe to numpy array
+    data = df.values
+    split_point = int(len(data) * (training_size))
+    training_set = data[:split_point]  # first 80%
+    test_set = data[split_point:]      # last 20%
+
+    print(f"Training set size: {len(training_set)}")
+    print(f"Test set size: {len(test_set)}")
+
+    # Test each digit in test set and count correct predictions
+    correct = 0
+    total = len(test_set)
+    wrong_digits = 0
+    print("Predicting test digits...")
+    # Simple progress bar using a loop
+    for i in range(total):
+        # Get the test features (pixels) and actual label
+        test_features = test_set[i, 0:64]  # columns 0-63 are pixels
+        actual_label = int(test_set[i, 64])  # column 64 is the label
+        
+        # Predict using 1-NN
+        predicted_label = predictiveModel(training_set, test_features)
+        # Check if correct
+        if predicted_label == actual_label:
+            correct += 1
+            #adding heatmap viz for first 5 inccoretc digits
+        else:
+            wrong_digits += 1
+            if wrong_digits < 5:
+                pixels = np.reshape(test_features, (8, 8))
+                drawDigitHeatmap(pixels)                
+        
+        # Show progress every 10%
+        if (i + 1) % (total // 10) == 0:
+            print(f"Progress: {i + 1}/{total} ({100 * (i + 1) / total:.0f}%)")
+
+    # Calculate and report accuracy
+    accuracy = correct / total
+    print(f"\nResults:")
+    print(f"Correct predictions: {correct}/{total}")
+    print(f"Accuracy: {accuracy:.3f}")
+
 ########################################################################### 
 
 def main() -> None:
@@ -115,55 +174,13 @@ def main() -> None:
     #
     # OK!  Onward to knn for digits! (based on your iris work...)
 
-    # Question 3: Split data 80/20, test with 1-NN
-    print("\n=== Question 3: Testing 1-NN classifier ===")
-    
-    # Check the data shape and info
-    print(f"Original data shape: {df.shape}")
-    print(f"Number of NaN values per column:\n{df.isna().sum()}")
-    
-    # Keep only the first 65 columns (64 pixels + 1 label)
-    df = df.iloc[:, :65]
-    
-    # Convert dataframe to numpy array
-    data = df.values
-    
-    # Split: first 80% for training, last 20% for testing
-    split_point = int(len(data) * 0.8)
-    training_set = data[:split_point]  # first 80%
-    test_set = data[split_point:]      # last 20%
-    
-    print(f"Training set size: {len(training_set)}")
-    print(f"Test set size: {len(test_set)}")
-    
-    # Test each digit in test set and count correct predictions
-    correct = 0
-    total = len(test_set)
-    
-    print("Predicting test digits...")
-    # Simple progress bar using a loop
-    for i in range(total):
-        # Get the test features (pixels) and actual label
-        test_features = test_set[i, 0:64]  # columns 0-63 are pixels
-        actual_label = int(test_set[i, 64])  # column 64 is the label
-        
-        # Predict using 1-NN
-        predicted_label = predictiveModel(training_set, test_features)
-        
-        # Check if correct
-        if predicted_label == actual_label:
-            correct += 1
-        
-        # Show progress every 10%
-        if (i + 1) % (total // 10) == 0:
-            print(f"Progress: {i + 1}/{total} ({100 * (i + 1) / total:.0f}%)")
-    
-    # Calculate and report accuracy
-    accuracy = correct / total
-    print(f"\nResults:")
-    print(f"Correct predictions: {correct}/{total}")
-    print(f"Accuracy: {accuracy:.3f}")
 
+    # Question 3: Split data 80/20, test with 1-NN
+
+
+    #running training and testing model
+    modelTrainingAndTesting('digits.csv', .8)
+    modelTrainingAndTesting('digits.csv', .2)
 ###############################################################################
 
 # wrap the call to main inside this if so that _this_ file can be imported
