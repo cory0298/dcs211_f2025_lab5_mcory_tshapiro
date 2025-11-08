@@ -29,7 +29,7 @@ def drawDigitHeatmap(pixels: np.ndarray, showNumbers: bool = True) -> None:
     plt.show(block = False)
 
 ###########################################################################
-def fetchDigit(df: pd.core.frame.DataFrame, which_row: int) -> tuple[int, np.ndarray]:
+def fetchDigit(df: pd.core.frame.DataFrame, which_row: int) -> tuple[int, np.ndarray]: #type: ignore
     ''' For digits.csv data represented as a dataframe, this fetches the digit from
         the corresponding row, reshapes, and returns a tuple of the digit and a
         numpy array of its pixel values.
@@ -47,7 +47,7 @@ def fetchDigit(df: pd.core.frame.DataFrame, which_row: int) -> tuple[int, np.nda
     pixels = np.reshape(pixels, (8,8))  # makes 8x8
     return (digit, pixels)              # return a tuple
 
-################################## 
+###########################################################################
 
 def predictiveModel(training_set: np.ndarray, features: np.ndarray) -> int:
     ''' Implements a 1-NN classifier to predict the digit for a given set of features.
@@ -77,36 +77,11 @@ def predictiveModel(training_set: np.ndarray, features: np.ndarray) -> int:
     
     return predicted_digit  
 
-###################
-def main() -> None:
-    # for read_csv, use header=0 when row 0 is a header row
-    filename = 'digits.csv'
-    df = pd.read_csv(filename, header = 0)
-    print(df.head())
-    print(f"{filename} : file read into a pandas dataframe...")
 
+def cleanTheData(data: pd.core.frame.DataFrame) -> np.ndarray: 
     '''
-    for i in range(num_to_draw):
-        # let's grab one row of the df at random, extract/shape the digit to be
-        # 8x8, and then draw a heatmap of that digit
-        random_row = random.randint(0, len(df) - 1)
-        (digit, pixels) = fetchDigit(df, random_row)
-
-        print(f"The digit is {digit}")
-        print(f"The pixels are\n{pixels}")  
-        drawDigitHeatmap(pixels)
-        plt.show()
-    '''
- 
-
-
-
-    #
-    # OK!  Onward to knn for digits! (based on your iris work...)
-
-def cleanTheData(data: pd.core.frame.DataFrame) -> np.ndarray:
-    '''
-    Cleans the dataframe made from digits.csv by removing useless values, converting all digits to float and returning a numpy array
+    Cleans the dataframe made from digits.csv by removing useless values, 
+    converting all digits to float and returning a numpy array
     '''
     data = data.iloc[:, :-1]
     data = data.astype(float)
@@ -115,10 +90,82 @@ def cleanTheData(data: pd.core.frame.DataFrame) -> np.ndarray:
     data_array = data.to_numpy()
     return data_array
 
+########################################################################### 
 
+def main() -> None:
+    # for read_csv, use header=0 when row 0 is a header row
+    filename = 'digits.csv'
+    df = pd.read_csv(filename, header = 0)
+    print(df.head())
+    print(f"{filename} : file read into a pandas dataframe...")
 
+    # Comment out heatmap drawing for now
+    # num_to_draw = 5
+    # for i in range(num_to_draw):
+    #     # let's grab one row of the df at random, extract/shape the digit to be
+    #     # 8x8, and then draw a heatmap of that digit
+    #     random_row = random.randint(0, len(df) - 1)
+    #     (digit, pixels) = fetchDigit(df, random_row)
+    #
+    #     print(f"The digit is {digit}")
+    #     print(f"The pixels are\n{pixels}")  
+    #     drawDigitHeatmap(pixels)
+    #     plt.show()
+
+    #
+    # OK!  Onward to knn for digits! (based on your iris work...)
+
+    # Question 3: Split data 80/20, test with 1-NN
+    print("\n=== Question 3: Testing 1-NN classifier ===")
+    
+    # Check the data shape and info
+    print(f"Original data shape: {df.shape}")
+    print(f"Number of NaN values per column:\n{df.isna().sum()}")
+    
+    # Keep only the first 65 columns (64 pixels + 1 label)
+    df = df.iloc[:, :65]
+    
+    # Convert dataframe to numpy array
+    data = df.values
+    
+    # Split: first 80% for training, last 20% for testing
+    split_point = int(len(data) * 0.8)
+    training_set = data[:split_point]  # first 80%
+    test_set = data[split_point:]      # last 20%
+    
+    print(f"Training set size: {len(training_set)}")
+    print(f"Test set size: {len(test_set)}")
+    
+    # Test each digit in test set and count correct predictions
+    correct = 0
+    total = len(test_set)
+    
+    print("Predicting test digits...")
+    # Simple progress bar using a loop
+    for i in range(total):
+        # Get the test features (pixels) and actual label
+        test_features = test_set[i, 0:64]  # columns 0-63 are pixels
+        actual_label = int(test_set[i, 64])  # column 64 is the label
+        
+        # Predict using 1-NN
+        predicted_label = predictiveModel(training_set, test_features)
+        
+        # Check if correct
+        if predicted_label == actual_label:
+            correct += 1
+        
+        # Show progress every 10%
+        if (i + 1) % (total // 10) == 0:
+            print(f"Progress: {i + 1}/{total} ({100 * (i + 1) / total:.0f}%)")
+    
+    # Calculate and report accuracy
+    accuracy = correct / total
+    print(f"\nResults:")
+    print(f"Correct predictions: {correct}/{total}")
+    print(f"Accuracy: {accuracy:.3f}")
 
 ###############################################################################
+
 # wrap the call to main inside this if so that _this_ file can be imported
 # and used as a library, if necessary, without executing its main
 if __name__ == "__main__":
