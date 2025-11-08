@@ -84,7 +84,8 @@ def main() -> None:
     df = pd.read_csv(filename, header = 0)
     print(df.head())
     print(f"{filename} : file read into a pandas dataframe...")
-    num_to_draw = 5
+
+    '''
     for i in range(num_to_draw):
         # let's grab one row of the df at random, extract/shape the digit to be
         # 8x8, and then draw a heatmap of that digit
@@ -95,6 +96,11 @@ def main() -> None:
         print(f"The pixels are\n{pixels}")  
         drawDigitHeatmap(pixels)
         plt.show()
+    '''
+ 
+
+
+
     #
     # OK!  Onward to knn for digits! (based on your iris work...)
 
