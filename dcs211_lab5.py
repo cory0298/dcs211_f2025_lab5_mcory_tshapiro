@@ -87,7 +87,7 @@ def cleanTheData(data: pd.core.frame.DataFrame) -> np.ndarray: #type: ignore
     converting all digits to float and returning a numpy array
     '''
     data = data.iloc[:, :-1]
-    data = data.astype(float)
+    data = data.astype(int)
     data = data.dropna()
     
     data_array = data.to_numpy()
@@ -102,13 +102,13 @@ def splitData(data: np.ndarray) -> list:
         list containing [X_test, y_test, X_train, y_train] in that order
     '''
     # Separate features (X) and labels (y)
-    X = data[:, 0:64]  # columns 0-63 are the pixel features
-    y = data[:, 64]    # column 64 is the label (digit)
+    X = data[:, :-1]  
+    y = data[:, -1]
     
     # Use sklearn to split: 80% train, 20% test
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=12121)
     
-    # Return in the order specified: X_test, y_test, X_train, y_train
+    # Return in the order specified: X_test, y_test, X_train, y_train   
     return [X_test, y_test, X_train, y_train]
 
 ###########################################################################
@@ -199,7 +199,7 @@ def compareLabels(predicted_labels: np.ndarray, actual_labels: np.ndarray) -> in
     return num_correct
 
 ###########################################################################
-def findBestK(X_train: np.ndarray, y_train: np.ndarray, random_seed: int = 42) -> int:
+def findBestK(X_train: np.ndarray, y_train: np.ndarray, random_seed: int = 8675309) -> int:
     '''
     Parameters:
         X_train: numpy array of training features
@@ -315,7 +315,7 @@ def main() -> None:
     print(f"Accuracy for k={k}: {accuracy:.3f}")
     # Question 9: Find best k using three different random seeds
     print("\nQuestion 9: Finding best k with different random seeds:")
-    seeds = [8675309, 5551212, 42]  # two given + one custom
+    seeds = [8675309, 5551212, 12345]  # two given + one custom
     best_k_values = []
 
     for seed in seeds:
@@ -325,7 +325,7 @@ def main() -> None:
 
     print(f"Best k for seed 8675309: {best_k_values[0]}")
     print(f"Best k for seed 5551212: {best_k_values[1]}")
-    print(f"Best k for seed 42: {best_k_values[2]}")
+    print(f"Best k for seed 12345: {best_k_values[2]}")
     
     # Check if they're all the same
     if best_k_values[0] == best_k_values[1] == best_k_values[2]:
