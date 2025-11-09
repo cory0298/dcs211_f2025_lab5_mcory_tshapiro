@@ -96,8 +96,7 @@ def cleanTheData(data: pd.core.frame.DataFrame) -> np.ndarray: #type: ignore
 ###########################################################################
 def splitData(data: np.ndarray) -> list:
     '''
-    Question 7: Splits data into training and testing sets using sklearn.
-    Parameters:
+    function to split data set between testin gand training
         data: numpy array with features in columns 0-63 and labels in column 64
     Returns:
         list containing [X_test, y_test, X_train, y_train] in that order
@@ -202,7 +201,6 @@ def compareLabels(predicted_labels: np.ndarray, actual_labels: np.ndarray) -> in
 ###########################################################################
 def findBestK(X_train: np.ndarray, y_train: np.ndarray, random_seed: int = 42) -> int:
     '''
-    Question 9: Finds the best k value by testing on a validation set.
     Parameters:
         X_train: numpy array of training features
         y_train: numpy array of training labels
@@ -233,7 +231,37 @@ def findBestK(X_train: np.ndarray, y_train: np.ndarray, random_seed: int = 42) -
     return best_k
 
 ########################################################################### 
+def trainAndTest(X_train: np.ndarray, y_train: np.ndarray, 
+                 X_test: np.ndarray, y_test: np.ndarray, best_k: int) -> np.ndarray:
+    '''
+    function to train and test the model using our new findbestk function
+    parameters:
+        X_train: numpy array of training features
+        y_train: numpy array of training labels
+        X_test: numpy array of test features
+        y_test: numpy array of true test labels
+        best_k: best k value determined from validation
+    Returns:
+        predicted_labels: numpy array of predicted labels for X_test
+    '''
+    print(f"\n=== Question 10: Training and testing with best k={best_k} ===")
 
+    # Create and train k-NN model
+    knn = KNeighborsClassifier(n_neighbors=best_k)
+    knn.fit(X_train, y_train)
+
+    # Predict labels for the test set
+    predicted_labels = knn.predict(X_test)
+
+    # Compute accuracy
+    accuracy = accuracy_score(y_test, predicted_labels)
+    print(f"Accuracy with k={best_k}: {accuracy:.3f}")
+
+    # Compare predicted vs actual labels
+    print("\nDetailed comparison (first 20 shown):")
+    compareLabels(predicted_labels[:20], y_test[:20])
+
+    return predicted_labels
 def main() -> None:
     # for read_csv, use header=0 when row 0 is a header row
     filename = 'digits.csv'
@@ -318,6 +346,13 @@ def main() -> None:
         chosen_k = best_k_values[2]
     
     print(f"Chosen best k: {chosen_k}")
+    predicted_labels = trainAndTest(X_train, y_train, X_test, y_test, chosen_k)
+    accuracy = accuracy_score(y_test, predicted_labels)
+    print("\ncomparison of predicted vs actual labels:")
+    compareLabels(predicted_labels, y_test)
+
+
+
     
 ###############################################################################
 
