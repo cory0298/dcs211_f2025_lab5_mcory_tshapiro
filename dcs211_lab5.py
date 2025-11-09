@@ -3,6 +3,7 @@ import pandas as pd     # Pandas is Python's "data" library ("dataframe" == spre
 import seaborn as sns   # yay for Seaborn plots!
 import matplotlib.pyplot as plt
 import random
+from sklearn.model_selection import train_test_split  # for Question 7
 
 ###########################################################################
 def drawDigitHeatmap(pixels: np.ndarray, showNumbers: bool = True) -> None:
@@ -90,12 +91,33 @@ def cleanTheData(data: pd.core.frame.DataFrame) -> np.ndarray: #type: ignore
     data_array = data.to_numpy()
     return data_array
 
-def modelTrainingAndTesting(filename: str, training_size: float) -> None: 
+###########################################################################
+def splitData(data: np.ndarray) -> list:
+    '''
+    Question 7: Splits data into training and testing sets using sklearn.
+    Parameters:
+        data: numpy array with features in columns 0-63 and labels in column 64
+    Returns:
+        list containing [X_test, y_test, X_train, y_train] in that order
+    '''
+    # Separate features (X) and labels (y)
+    X = data[:, 0:64]  # columns 0-63 are the pixel features
+    y = data[:, 64]    # column 64 is the label (digit)
+    
+    # Use sklearn to split: 80% train, 20% test
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    
+    # Return in the order specified: X_test, y_test, X_train, y_train
+    return [X_test, y_test, X_train, y_train]
+
+###########################################################################
+def modelTrainingAndTesting(filename: str, training_size: float, show_misclassified: bool = False) -> None: 
     '''
     Helper function for training and testing the model with different split points
     Parameters:
         Filename: filename of the file to be read
         Training size: 0 - 1 representing how what percent of the file is to be training
+        show_misclassified: if True, shows heatmaps of first 5 misclassified digits
     '''
     df = pd.read_csv(filename, header = 0)
     print("\n=== Question 3: Testing 1-NN classifier ===")
@@ -133,9 +155,9 @@ def modelTrainingAndTesting(filename: str, training_size: float) -> None:
         if predicted_label == actual_label:
             correct += 1
         else:
-            # Question 5: Visualize first 5 incorrectly predicted digits
+            # Question 5: Visualize first 5 incorrectly predicted digits (only if requested)
             wrong_digits += 1
-            if wrong_digits <= 5:
+            if show_misclassified and wrong_digits <= 5:
                 print(f"\nMisclassified digit #{wrong_digits}:")
                 print(f"  Actual label: {actual_label}")
                 print(f"  Predicted label: {predicted_label}")
@@ -177,13 +199,27 @@ def main() -> None:
     #
     # OK!  Onward to knn for digits! (based on your iris work...)
 
-
-    # Question 3: Split data 80/20, test with 1-NN
-
-
-    #running training and testing model
-    modelTrainingAndTesting('digits.csv', .8)
-    modelTrainingAndTesting('digits.csv', .2)
+    # Questions 3 & 4: running training and testing model with manual split
+    # Question 5: Show misclassified digits only on first run
+    modelTrainingAndTesting('digits.csv', .8, show_misclassified=True)
+    modelTrainingAndTesting('digits.csv', .2, show_misclassified=False)
+    
+    # Question 7: Test the splitData function with sklearn
+    print("\n=== Question 7: Testing sklearn splitData function ===")
+    
+    # Prepare data
+    df_clean = df.iloc[:, :65]  # keep only first 65 columns
+    data = df_clean.values
+    
+    # Call splitData function
+    X_test, y_test, X_train, y_train = splitData(data)
+    
+    # Print the results to verify it worked
+    print(f"X_train shape: {X_train.shape}")
+    print(f"y_train shape: {y_train.shape}")
+    print(f"X_test shape: {X_test.shape}")
+    print(f"y_test shape: {y_test.shape}")
+    
 ###############################################################################
 
 # wrap the call to main inside this if so that _this_ file can be imported
