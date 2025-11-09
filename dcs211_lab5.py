@@ -4,6 +4,9 @@ import seaborn as sns   # yay for Seaborn plots!
 import matplotlib.pyplot as plt
 import random
 from sklearn.model_selection import train_test_split  # for Question 7
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score
+
 
 ###########################################################################
 def drawDigitHeatmap(pixels: np.ndarray, showNumbers: bool = True) -> None:
@@ -49,7 +52,6 @@ def fetchDigit(df: pd.core.frame.DataFrame, which_row: int) -> tuple[int, np.nda
     return (digit, pixels)              # return a tuple
 
 ###########################################################################
-
 def predictiveModel(training_set: np.ndarray, features: np.ndarray) -> int:
     ''' Implements a 1-NN classifier to predict the digit for a given set of features.
     Parameters:
@@ -78,7 +80,7 @@ def predictiveModel(training_set: np.ndarray, features: np.ndarray) -> int:
     
     return predicted_digit  
 
-
+###########################################################################
 def cleanTheData(data: pd.core.frame.DataFrame) -> np.ndarray: #type: ignore
     '''
     Cleans the dataframe made from digits.csv by removing useless values, 
@@ -161,8 +163,8 @@ def modelTrainingAndTesting(filename: str, training_size: float, show_misclassif
                 print(f"\nMisclassified digit #{wrong_digits}:")
                 print(f"  Actual label: {actual_label}")
                 print(f"  Predicted label: {predicted_label}")
-                pixels = np.reshape(test_features, (8, 8))
-                drawDigitHeatmap(pixels)                
+                #pixels = np.reshape(test_features, (8, 8))
+                #drawDigitHeatmap(pixels)                
         
         # Show progress every 10%
         if (i + 1) % (total // 10) == 0:
@@ -173,6 +175,55 @@ def modelTrainingAndTesting(filename: str, training_size: float, show_misclassif
     print(f"\nResults:")
     print(f"Correct predictions: {correct}/{total}")
     print(f"Accuracy: {accuracy:.3f}")
+
+###########################################################################
+def compareLabels(predicted_labels: np.ndarray, actual_labels: np.ndarray) -> int:
+    ''' a more neatly formatted comparison, returning the number correct '''
+    num_labels = len(predicted_labels)
+    num_correct = 0
+
+    for i in range(num_labels):
+        predicted = int(round(predicted_labels[i]))  # round-to-int protects from float imprecision
+        actual    = int(round(actual_labels[i]))
+        result = "incorrect"
+        if predicted == actual:  # if they match,
+            result = ""       # no longer incorrect
+            num_correct += 1  # and we count a match!
+
+            print(f"{i:>5d} {predicted:>10d} {actual:>10d} {result:>12s}")
+
+
+    accuracy = num_correct / num_labels
+    print(f"Correct: {num_correct} out of {num_labels}")
+    print(f"Accuracy: {accuracy:.3f}")
+    
+    return num_correct
+
+###########################################################################
+def findBestK(X_train: np.ndarray, y_train: np.ndarray) -> int:
+    '''
+    Parameters:
+        X_train: numpy array of training features
+        y_train: numpy array of training labels
+
+    Returns:
+        best_k: the k value from 1 to 85 that gives highest accuracy on validation data
+    '''
+    best_k = None
+    best_accuracy = 0.0
+
+    for k in range(1, 85):
+        knn = KNeighborsClassifier(n_neighbors=k)
+        knn.fit(X_train, y_train)
+        acc = knn.score(X_train, y_train) 
+        print(acc)
+
+        if acc > best_accuracy:
+            best_accuracy = acc
+            best_k = k
+
+    print(f"\nBest k = {best_k}  with accuracy = {best_accuracy:.3f}")
+    return best_k
 
 ########################################################################### 
 
@@ -219,6 +270,33 @@ def main() -> None:
     print(f"y_train shape: {y_train.shape}")
     print(f"X_test shape: {X_test.shape}")
     print(f"y_test shape: {y_test.shape}")
+
+    #Question 8 Stuff
+    X_test, y_test, X_train, y_train = splitData(data)
+    k = 1
+    #Testing model with k = 3 value
+    knn = KNeighborsClassifier(n_neighbors=k)
+    knn.fit(X_train, y_train)
+    y_prediction = knn.predict(X_test)
+    accuracy = accuracy_score(y_test, y_prediction)
+    print(f"Accuracy for k={k}: {accuracy:.3f}")
+    compareLabels(y_prediction, y_test)
+    findBestK(X_train, y_train)
+    '''
+    
+    #Question 9 stuff: splitting and calling finbeskt 
+    seeds = [8675309, 5551212, 42]  # two given + one custom
+
+    for seed in seeds:
+        random.seed(seed)
+
+        X_subtrain, X_val, y_subtrain, y_val = train_test_split(
+            X_train, y_train, test_size=0.2, random_state=seed
+        )
+
+        best_k = findBestK(X_subtrain, y_subtrain)
+        print(f"Best K for seed: {seed} is {best_k}")
+    '''
     
 ###############################################################################
 
