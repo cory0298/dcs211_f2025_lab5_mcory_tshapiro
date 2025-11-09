@@ -200,29 +200,36 @@ def compareLabels(predicted_labels: np.ndarray, actual_labels: np.ndarray) -> in
     return num_correct
 
 ###########################################################################
-def findBestK(X_train: np.ndarray, y_train: np.ndarray) -> int:
+def findBestK(X_train: np.ndarray, y_train: np.ndarray, random_seed: int = 42) -> int:
     '''
+    Question 9: Finds the best k value by testing on a validation set.
     Parameters:
         X_train: numpy array of training features
         y_train: numpy array of training labels
+        random_seed: seed for reproducible splits
 
     Returns:
         best_k: the k value from 1 to 85 that gives highest accuracy on validation data
     '''
-    best_k = None
+    # Split training data into sub-training and validation sets
+    X_subtrain, X_val, y_subtrain, y_val = train_test_split(
+        X_train, y_train, test_size=0.2, random_state=random_seed
+    )
+    
+    best_k = 1
     best_accuracy = 0.0
 
-    for k in range(1, 85):
+    print(f"Testing k values from 1 to 85 with seed {random_seed}...")
+    for k in range(1, 86):
         knn = KNeighborsClassifier(n_neighbors=k)
-        knn.fit(X_train, y_train)
-        acc = knn.score(X_train, y_train) 
-        print(acc)
+        knn.fit(X_subtrain, y_subtrain)  # Train on sub-training set
+        acc = knn.score(X_val, y_val)     # Test on validation set (NOT training!)
 
         if acc > best_accuracy:
             best_accuracy = acc
             best_k = k
 
-    print(f"\nBest k = {best_k}  with accuracy = {best_accuracy:.3f}")
+    print(f"Best k = {best_k} with validation accuracy = {best_accuracy:.3f}")
     return best_k
 
 ########################################################################### 
@@ -271,32 +278,46 @@ def main() -> None:
     print(f"X_test shape: {X_test.shape}")
     print(f"y_test shape: {y_test.shape}")
 
-    #Question 8 Stuff
-    X_test, y_test, X_train, y_train = splitData(data)
-    k = 1
-    #Testing model with k = 3 value
+    # Question 8: Test k-NN with sklearn using a guessed k value
+    k = 3  # Choosing k=3 as initial guess (common starting point)
     knn = KNeighborsClassifier(n_neighbors=k)
     knn.fit(X_train, y_train)
     y_prediction = knn.predict(X_test)
     accuracy = accuracy_score(y_test, y_prediction)
     print(f"Accuracy for k={k}: {accuracy:.3f}")
-    compareLabels(y_prediction, y_test)
-    findBestK(X_train, y_train)
-    '''
-    
-    #Question 9 stuff: splitting and calling finbeskt 
+    # Question 9: Find best k using three different random seeds
+    print("\nQuestion 9: Finding best k with different random seeds:")
     seeds = [8675309, 5551212, 42]  # two given + one custom
+    best_k_values = []
 
     for seed in seeds:
-        random.seed(seed)
+        print(f"\n--- Testing with seed {seed} ---")
+        best_k = findBestK(X_train, y_train, random_seed=seed)
+        best_k_values.append(best_k)
 
-        X_subtrain, X_val, y_subtrain, y_val = train_test_split(
-            X_train, y_train, test_size=0.2, random_state=seed
-        )
-
-        best_k = findBestK(X_subtrain, y_subtrain)
-        print(f"Best K for seed: {seed} is {best_k}")
-    '''
+    print(f"Best k for seed 8675309: {best_k_values[0]}")
+    print(f"Best k for seed 5551212: {best_k_values[1]}")
+    print(f"Best k for seed 42: {best_k_values[2]}")
+    
+    # Check if they're all the same
+    if best_k_values[0] == best_k_values[1] == best_k_values[2]:
+        print("Are they all the same? YES")
+    else:
+        print("Are they all the same? NO")
+    
+    # Pick the most common k value
+    count_0 = best_k_values.count(best_k_values[0])
+    count_1 = best_k_values.count(best_k_values[1])
+    count_2 = best_k_values.count(best_k_values[2])
+    
+    if count_0 >= count_1 and count_0 >= count_2:
+        chosen_k = best_k_values[0]
+    elif count_1 >= count_2:
+        chosen_k = best_k_values[1]
+    else:
+        chosen_k = best_k_values[2]
+    
+    print(f"Chosen best k: {chosen_k}")
     
 ###############################################################################
 
