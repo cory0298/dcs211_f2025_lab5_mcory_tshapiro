@@ -92,9 +92,13 @@ def cleanTheData(data: pd.core.frame.DataFrame) -> np.ndarray: #type: ignore
     '''
     # Drop any columns that have NaN values
     data = data.dropna(axis=1)
+    # Drop any rows that have NaN values  
+    data = data.dropna(axis=0)
+    # Reset index after dropping rows
+    data = data.reset_index(drop=True)
     # Convert to numpy array
     data_array = data.to_numpy()
-    # Convert to int
+    # Convert to int (this will fail if there are any non-numeric values left)
     data_array = data_array.astype(int)
     return data_array
 
@@ -113,8 +117,12 @@ def splitData(data: np.ndarray, random_state: int = 42) -> tuple[np.ndarray, np.
     X = data[:, :-1]  # all columns except the last one are features
     y = data[:, -1]   # last column is the label
     
+    # Calculate exact test size 
+    n_samples = len(data)
+    test_size = n_samples // 5  # 20% using integer division (rounds down)
+    
     # Use sklearn to split: 80% train, 20% test
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size)
     
     # Return in the order specified by assignment: X_test, y_test, X_train, y_train
     return (X_test, y_test, X_train, y_train)
