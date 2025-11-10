@@ -85,31 +85,39 @@ def cleanTheData(data: pd.core.frame.DataFrame) -> np.ndarray: #type: ignore
     '''
     Cleans the dataframe made from digits.csv by removing useless values, 
     converting all digits to float and returning a numpy array
+    Parameters:
+        data: pandas dataframe to clean
+    Returns:
+        data_array: cleaned numpy array
     '''
-    data = data.iloc[:, :-1]
-    data = data.astype(int)
-    data = data.dropna()
-    
+    # Drop any columns that have NaN values
+    data = data.dropna(axis=1)
+    # Convert to numpy array
     data_array = data.to_numpy()
+    # Convert to int
+    data_array = data_array.astype(int)
     return data_array
 
 ###########################################################################
-def splitData(data: np.ndarray) -> list:
+def splitData(data: np.ndarray, random_state: int = 42) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     '''
-    function to split data set between testin gand training
-        data: numpy array with features in columns 0-63 and labels in column 64
+    Question 7: Splits data into training and testing sets using sklearn.
+    Parameters:
+        data: numpy array with features in all columns except last, and labels in last column
+        random_state: seed for random number generator (default 42)
     Returns:
-        list containing [X_test, y_test, X_train, y_train] in that order
+        tuple containing (X_test, y_test, X_train, y_train) in that order
     '''
     # Separate features (X) and labels (y)
-    X = data[:, :-1]  
-    y = data[:, -1]
+    # Use all columns except the last one for features
+    X = data[:, :-1]  # all columns except the last one are features
+    y = data[:, -1]   # last column is the label
     
     # Use sklearn to split: 80% train, 20% test
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=12121)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=random_state)
     
-    # Return in the order specified: X_test, y_test, X_train, y_train   
-    return [X_test, y_test, X_train, y_train]
+    # Return in the order specified by assignment: X_test, y_test, X_train, y_train
+    return (X_test, y_test, X_train, y_train)
 
 ###########################################################################
 def modelTrainingAndTesting(filename: str, training_size: float, show_misclassified: bool = False) -> None: 
@@ -162,8 +170,8 @@ def modelTrainingAndTesting(filename: str, training_size: float, show_misclassif
                 print(f"\nMisclassified digit #{wrong_digits}:")
                 print(f"  Actual label: {actual_label}")
                 print(f"  Predicted label: {predicted_label}")
-                #pixels = np.reshape(test_features, (8, 8))
-                #drawDigitHeatmap(pixels)                
+                pixels = np.reshape(test_features, (8, 8))
+                drawDigitHeatmap(pixels)                
         
         # Show progress every 10%
         if (i + 1) % (total // 10) == 0:
@@ -199,8 +207,9 @@ def compareLabels(predicted_labels: np.ndarray, actual_labels: np.ndarray) -> in
     return num_correct
 
 ###########################################################################
-def findBestK(X_train: np.ndarray, y_train: np.ndarray, random_seed: int = 8675309) -> int:
+def findBestK(X_train: np.ndarray, y_train: np.ndarray, random_seed: int = 42) -> int:
     '''
+    Question 9: Finds the best k value by testing on a validation set.
     Parameters:
         X_train: numpy array of training features
         y_train: numpy array of training labels
@@ -230,38 +239,32 @@ def findBestK(X_train: np.ndarray, y_train: np.ndarray, random_seed: int = 86753
     print(f"Best k = {best_k} with validation accuracy = {best_accuracy:.3f}")
     return best_k
 
-########################################################################### 
+###########################################################################
 def trainAndTest(X_train: np.ndarray, y_train: np.ndarray, 
-                 X_test: np.ndarray, y_test: np.ndarray, best_k: int) -> np.ndarray:
+                 X_test: np.ndarray, best_k: int) -> np.ndarray:
     '''
-    function to train and test the model using our new findbestk function
-    parameters:
+    Question 10: Train and test the model using the best k value.
+    Parameters:
         X_train: numpy array of training features
         y_train: numpy array of training labels
         X_test: numpy array of test features
-        y_test: numpy array of true test labels
         best_k: best k value determined from validation
     Returns:
         predicted_labels: numpy array of predicted labels for X_test
     '''
     print(f"\n=== Question 10: Training and testing with best k={best_k} ===")
 
-    # Create and train k-NN model
+    # Create and train k-NN model with best k
     knn = KNeighborsClassifier(n_neighbors=best_k)
     knn.fit(X_train, y_train)
 
     # Predict labels for the test set
     predicted_labels = knn.predict(X_test)
 
-    # Compute accuracy
-    accuracy = accuracy_score(y_test, predicted_labels)
-    print(f"Accuracy with k={best_k}: {accuracy:.3f}")
-
-    # Compare predicted vs actual labels
-    print("\nDetailed comparison (first 20 shown):")
-    compareLabels(predicted_labels[:20], y_test[:20])
-
     return predicted_labels
+
+########################################################################### 
+
 def main() -> None:
     # for read_csv, use header=0 when row 0 is a header row
     filename = 'digits.csv'
@@ -269,18 +272,18 @@ def main() -> None:
     print(df.head())
     print(f"{filename} : file read into a pandas dataframe...")
 
-    # Comment out heatmap drawing for now
-    # num_to_draw = 5
-    # for i in range(num_to_draw):
-    #     # let's grab one row of the df at random, extract/shape the digit to be
-    #     # 8x8, and then draw a heatmap of that digit
-    #     random_row = random.randint(0, len(df) - 1)
-    #     (digit, pixels) = fetchDigit(df, random_row)
-    #
-    #     print(f"The digit is {digit}")
-    #     print(f"The pixels are\n{pixels}")  
-    #     drawDigitHeatmap(pixels)
-    #     plt.show()
+    # Initial heatmap drawing to visualize the data
+    num_to_draw = 5
+    for i in range(num_to_draw):
+        # let's grab one row of the df at random, extract/shape the digit to be
+        # 8x8, and then draw a heatmap of that digit
+        random_row = random.randint(0, len(df) - 1)
+        (digit, pixels) = fetchDigit(df, random_row)
+
+        print(f"The digit is {digit}")
+        print(f"The pixels are\n{pixels}")  
+        drawDigitHeatmap(pixels)
+        plt.show()
 
     #
     # OK!  Onward to knn for digits! (based on your iris work...)
@@ -297,7 +300,7 @@ def main() -> None:
     df_clean = df.iloc[:, :65]  # keep only first 65 columns
     data = df_clean.values
     
-    # Call splitData function
+    # Call splitData function (returns X_test, y_test, X_train, y_train)
     X_test, y_test, X_train, y_train = splitData(data)
     
     # Print the results to verify it worked
@@ -315,7 +318,7 @@ def main() -> None:
     print(f"Accuracy for k={k}: {accuracy:.3f}")
     # Question 9: Find best k using three different random seeds
     print("\nQuestion 9: Finding best k with different random seeds:")
-    seeds = [8675309, 5551212, 12345]  # two given + one custom
+    seeds = [8675309, 5551212, 42]  # two given + one custom
     best_k_values = []
 
     for seed in seeds:
@@ -325,7 +328,7 @@ def main() -> None:
 
     print(f"Best k for seed 8675309: {best_k_values[0]}")
     print(f"Best k for seed 5551212: {best_k_values[1]}")
-    print(f"Best k for seed 12345: {best_k_values[2]}")
+    print(f"Best k for seed 42: {best_k_values[2]}")
     
     # Check if they're all the same
     if best_k_values[0] == best_k_values[1] == best_k_values[2]:
@@ -346,13 +349,15 @@ def main() -> None:
         chosen_k = best_k_values[2]
     
     print(f"Chosen best k: {chosen_k}")
-    predicted_labels = trainAndTest(X_train, y_train, X_test, y_test, chosen_k)
+    
+    # Question 10: Train and test with the chosen best k
+    predicted_labels = trainAndTest(X_train, y_train, X_test, chosen_k)
+    
+    # Calculate accuracy and show comparison
     accuracy = accuracy_score(y_test, predicted_labels)
-    print("\ncomparison of predicted vs actual labels:")
+    print(f"\nAccuracy with k={chosen_k}: {accuracy:.3f}")
+    print("\nComparison of predicted vs actual labels:")
     compareLabels(predicted_labels, y_test)
-
-
-
     
 ###############################################################################
 
