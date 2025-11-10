@@ -114,7 +114,7 @@ def splitData(data: np.ndarray, random_state: int = 42) -> tuple[np.ndarray, np.
     y = data[:, -1]   # last column is the label
     
     # Use sklearn to split: 80% train, 20% test
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=random_state)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
     
     # Return in the order specified by assignment: X_test, y_test, X_train, y_train
     return (X_test, y_test, X_train, y_train)
@@ -260,7 +260,6 @@ def trainAndTest(X_train: np.ndarray, y_train: np.ndarray,
 
     # Predict labels for the test set
     predicted_labels = knn.predict(X_test)
-
     return predicted_labels
 
 ########################################################################### 
